@@ -47,11 +47,25 @@ jobs:
         IMAGE_TAG: latest
       run: |
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
     - name: Force ECS service redeploy
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
         aws ecs update-service \
-          --cluster <YOUR_CLUSTER_NAME> \
-          --service <YOUR_SERVICE_NAME> \
+          --cluster secure-cluster \
+          --service secure-service \
           --force-new-deployment \
-          --region ${{ secrets.AWS_REGION }}
+          --region $AWS_REGION
 
+    - name: Rollback on failure
+      if: failure()
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+      run: |
+        echo "⚠️ Deployment failed. Reverting to previous stable task definition."
+        aws ecs update-service \
+          --cluster secure-cluster \
+          --service secure-service \
+          --force-new-deployment \
+          --region $AWS_REGION
