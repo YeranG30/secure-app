@@ -47,3 +47,11 @@ jobs:
         IMAGE_TAG: latest
       run: |
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - name: Force ECS service redeploy
+      run: |
+        aws ecs update-service \
+          --cluster <YOUR_CLUSTER_NAME> \
+          --service <YOUR_SERVICE_NAME> \
+          --force-new-deployment \
+          --region ${{ secrets.AWS_REGION }}
+
